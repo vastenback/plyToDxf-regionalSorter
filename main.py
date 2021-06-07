@@ -1,6 +1,7 @@
 from collections import defaultdict
 from sys import setrecursionlimit
 import os
+import pymeshlab
 
 all_faces = []
 node_neighbour_faces = defaultdict(set)
@@ -146,6 +147,14 @@ def listToDict(faceStruct):
         correctedStruct[i] = faceStruct[i]
     return correctedStruct
 
+def plyToDxf(base_path, directory_name, nr):
+    full_path = base_path + "\\" + str(directory_name)
+    ms = pymeshlab.MeshSet()
+    ms.load_new_mesh(full_path + "\\" + "PLY" + "\\" + str(nr) + ".ply")
+    ms.save_current_mesh(full_path + "\\" + "DXF" + "\\" + str(nr) + ".dxf")
+    print("Export ply to dxf: " + full_path + "\\" + "DXF" + "\\" + str(nr) + ".dxf")
+    return True
+
 ### Function contains lots of hacks, beware ###
 def traverseNodes(promptsList, nodeList):
     faceDict = listToDict(all_faces)
@@ -177,14 +186,18 @@ def traverseNodes(promptsList, nodeList):
 
         try:
             dirName = output_folder + "\\" + promptsList[i][0]
+            subDirName_1 = dirName + "\\" + "PLY"
+            subDirName_2 = dirName + "\\" + "DXF"
             os.mkdir(dirName)
+            os.mkdir(subDirName_1)
+            os.mkdir(subDirName_2)
         except FileExistsError:
             print("Directory already exists, continue on as normal")
         except:
             exit("Couldn't create directory: " + dirName + ". Restart program with admin rights and check given input and output folder locations. ")
 
         for faceCurr in currRegions_Faces:
-            filename = output_folder + "\\" + promptsList[i][0] + "\\" + str(faceCurr) + ".ply"
+            filename = output_folder + "\\" + promptsList[i][0] + "\\" + "PLY" + "\\" + str(faceCurr) + ".ply"
             file = open(filename, 'w')
             print("Created file: " + filename)
             file.write("ply\n")
@@ -205,11 +218,14 @@ def traverseNodes(promptsList, nodeList):
             file.write(str(coord3) + "\n")
             file.write("3 0 1 2\n")
             file.close()
+            if (plyToDxf(output_folder, promptsList[i][0], faceCurr)) == False:
+                exit("Couldn't write .ply to .dxf, exiting. ")
 
         for faceToRemove in currRegions_Faces:
             if faceDict[faceToRemove] != None:
                 removedFace = faceDict.pop(faceToRemove)
 
+        #.copy() necessary to avoid error where dict or set changes size over iteration
         for key, container in node_neighbour_nodes.copy().items():
             for elem in container.copy():
                 if elem in visitedNodes:
@@ -229,14 +245,18 @@ def traverseNodes(promptsList, nodeList):
 
     try:
         dirName = output_folder + "\\" + "REST"
+        subDirName_1 = dirName + "\\" + "PLY"
+        subDirName_2 = dirName + "\\" + "DXF"
         os.mkdir(dirName)
+        os.mkdir(subDirName_1)
+        os.mkdir(subDirName_2)
     except FileExistsError:
         print("Directory already exists, continue on as normal")
     except:
         exit("Couldn't create directory: " + dirName + ". Restart program with admin rights and check given input and output folder locations. ")
 
     for faceRestCurr in faceDictAll:
-        filename = output_folder + "\\" + "REST" + "\\" + str(faceRestCurr) + ".ply"
+        filename = output_folder + "\\" + "REST" + "\\" + "PLY" + "\\" + str(faceRestCurr) + ".ply"
         file = open(filename, 'w')
         print("Created file: " + filename)
         file.write("ply\n")
@@ -257,7 +277,8 @@ def traverseNodes(promptsList, nodeList):
         file.write(str(coord3) + "\n")
         file.write("3 0 1 2\n")
         file.close()
-
+        if (plyToDxf(output_folder, "REST", faceRestCurr)) == False:
+            exit("Couldn't write .ply to .dxf, exiting. ")
 
 if __name__ == '__main__':
     readPly()
