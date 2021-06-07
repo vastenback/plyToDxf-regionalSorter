@@ -1,6 +1,6 @@
 # plyToDxf regional sorter
 
-Script that transforms a single mesh defined in .ply to multiple individual .dxf files according to user defined regions.
+Script that transforms a single mesh defined in .ply to multiple individual .dxf files according to user defined sub-regions.
 
 ## Usage
 
